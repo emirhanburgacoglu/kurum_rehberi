@@ -24,6 +24,7 @@ class Home extends Frontend_Controller
         $institutions = $this->institution_service->get_filtered_list($filters);
 
         $data = array(
+            'current' => 'home',
             'title' => 'Kurum Rehberi',
             'filters' => $filters,
             'total' => count($institutions),
