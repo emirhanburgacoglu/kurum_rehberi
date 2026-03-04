@@ -4,7 +4,6 @@ Bu doküman, "Kurum Rehberi" projesinin **fiziksel olarak şu anda var olan** do
 
 Aşağıdaki ağaç yapısı **doğrudan projenin mevcut durumunu** gösterir:
 
-
 📁 kurum_rehberi/               -> PROJE ANA DİZİNİ
 │
 ├── 📁 application/             # 🛠 PROJENİN KALBİ (Bütün kodlarımız burada)
@@ -80,8 +79,7 @@ Bu yaklaşımda:
 
 ## Zorunlu Geliştirme Sırası (Servislerden ve Methodlardan Önce)
 
-Bu projede standart geliştirme sırası aşağıdaki gibidir.  
-Servis isimlerine ve method detaylarına geçmeden önce bu sıra uygulanır.
+Bu projede standart geliştirme sırası aşağıdaki gibidir.Servis isimlerine ve method detaylarına geçmeden önce bu sıra uygulanır.
 
 1. Migration ve tablo yapısı netleştirilir.
 2. İlgili `Model` dosyası yazılır (`X_model`).
@@ -750,26 +748,32 @@ Kısa cevap: Önce `Model`, sonra `Service`, sonra `Controller` (Web/API).
 Önerilen standart sıra:
 
 1. Veritabanı ve migration netleştirme
+
 - Tablo/alan/FK yapısı kesinleşir.
 
 2. Model yazımı
+
 - Ham query ve CRUD burada yazılır.
 - Model, iş kuralı değil veri erişimi yapar.
 
 3. Service yazımı
+
 - İş kuralları, validasyon, dönüşüm, akış kontrolü burada kurulur.
 - Birden fazla modeli burada birleştirebilirsin.
 
 4. Controller yazımı
+
 - Service çağırır, request alır, response/view döner.
 - Web controller: HTML sayfa akışı.
 - API controller: JSON response akışı.
 
 5. Route ve middleware benzeri kontroller
+
 - Auth gereken endpointlerde kontrol.
 - Yetki/rol kontrolleri.
 
 6. Test ve doğrulama
+
 - En azından happy-path + validation + hata akışları doğrulanır.
 
 ## Feature Bazlı Uygulama Checklist
@@ -808,6 +812,7 @@ Genel şablon:
 ### 1) User + Auth (ilk faz, zorunlu)
 
 1. Model
+
 - `User_model`:
 - `find($id)`
 - `find_by_email($email)`
@@ -817,17 +822,20 @@ Genel şablon:
 - `set_remember_token(...)`
 
 2. Service
+
 - `User_service`:
 - kullanıcı CRUD ve şifre işlemleri
 - `Auth_service`:
 - `register`, `login`, `logout`, `is_logged_in`, `current_user`
 
 3. Controller (Web)
+
 - `web/Auth.php`:
 - `login`, `register`, `logout`
 - form validasyon + service çağrısı + redirect
 
 4. Controller (API)
+
 - `api/v1/Auth.php` (gerekiyorsa):
 - `login`, `register`, `logout`
 - JSON response standardı
@@ -849,18 +857,22 @@ Genel şablon:
 ### 4) City + District
 
 1. Model:
+
 - `City_model`
 - `District_model` (`list_by_city`, `find_by_city_and_slug`)
 
 2. Service:
+
 - `City_service`
 - `District_service` (city+slug unique kontrolü)
 
 3. Web Controller:
+
 - `web/Cities.php`
 - `web/Districts.php`
 
 4. API Controller:
+
 - `api/v1/Cities.php`
 - `api/v1/Districts.php`
 
@@ -874,42 +886,51 @@ Genel şablon:
 ### 6) Attribute + Faq + Category_attribute
 
 1. Model:
+
 - `Attribute_model`
 - `Faq_model`
 - `Category_attribute_model`
 
 2. Service:
+
 - `Attribute_service`
 - `Faq_service`
 - `Category_attribute_service` (`attach`, `detach`, `sync`)
 
 3. Web Controller:
+
 - `web/Attributes.php`
 - `web/Faqs.php`
 - `web/Category_attributes.php`
 
 4. API Controller:
+
 - `api/v1/Attributes.php`
 - `api/v1/Faqs.php`
 
 ### 7) Institution (ana domain)
 
 1. Model:
+
 - `Institution_model` (search, detail, CRUD, count)
 
 2. Service:
+
 - `Institution_service` (filtreleme, detay dönüşümü, görüntülenme sayaçları, package bağlama)
 
 3. Web Controller:
+
 - `web/Institutions.php`
 - `web/Home.php` (liste/arama)
 
 4. API Controller:
+
 - `api/v1/Institutions.php`
 
 ### 8) Institution ilişkili alt domainler
 
 1. Model:
+
 - `Institution_attribute_model`
 - `Institution_image_model`
 - `Institution_application_model`
@@ -917,6 +938,7 @@ Genel şablon:
 - `Institution_faq_answer_model`
 
 2. Service:
+
 - `Institution_attribute_service`
 - `Institution_image_service`
 - `Institution_application_service`
@@ -924,6 +946,7 @@ Genel şablon:
 - `Institution_faq_answer_service`
 
 3. Web Controller:
+
 - `web/Institution_attributes.php`
 - `web/Institution_images.php`
 - `web/Institution_applications.php`
@@ -931,6 +954,7 @@ Genel şablon:
 - `web/Institution_faq_answers.php`
 
 4. API Controller:
+
 - `api/v1/Institution_images.php`
 - `api/v1/Institution_inquiries.php`
 - `api/v1/Institution_applications.php`
@@ -946,55 +970,3 @@ Bir domain tamamlandı sayılması için:
 4. API controller (varsa) doğru HTTP kodu ve JSON dönüyor.
 5. Route tanımları tamam.
 6. Başarılı ve hatalı senaryolar test edildi.
-
-## View Katmanı Kapsamı
-
-Projenin ön yüzünü (HTML/CSS/JS) oluşturan View dosyaları `application/views/` klasörü altında modüler olarak organize edilir. Controller katmanından gönderilen veriler (data) burada ekrana basılır. İş kuralları veya veritabanı sorguları View içinde kesinlikle yer almaz.
-
-### 1) Layouts ve Ortak Parçalar (Partials)
-1. `layouts/main.php` - Sitenin genel HTML iskeleti (`<head>`, `<body>`).
-2. `layouts/admin.php` - Admin paneli genel iskeleti.
-3. `layouts/panel.php` - Kurum sahibi/Kullanıcı paneli genel iskeleti.
-4. `partials/navbar.php` - Üst navigasyon menüsü, arama çubuğu ve kullanıcı butonları.
-5. `partials/footer.php` - Sayfa altı linkler ve iletişim bilgileri.
-6. `partials/admin_sidebar.php` - Admin paneli sol menüsü.
-7. `partials/panel_sidebar.php` - Kullanıcı paneli sol menüsü.
-
-### 2) Auth (Kullanıcı Giriş ve Sistem Kayıt)
-1. `auth/login.php` - Sisteme giriş formu.
-2. `auth/register.php` - Yeni kullanıcı kayıt formu.
-3. `auth/forgot_password.php` - Şifre sıfırlama talep formu.
-4. `auth/reset_password.php` - Yeni şifre belirleme ekranı.
-
-### 3) Home (Ana Sayfa)
-1. `home/index.php` - Karşılama, arama motoru, kategoriler ve öne çıkan kurumlar.
-
-### 4) Institutions (Ziyaretçi Arayüzü - Kurum Keşfi)
-1. `institutions/index.php` - Kurum listeleme, detaylı filtreleme (sol menü) ve sayfalama.
-2. `institutions/show.php` - Kurum detay sayfası (galeri, harita, özellikler, SSS, iletişim).
-
-### 5) Panel (Kullanıcı/Kurum Sahibi İşlemleri)
-1. `panel/dashboard.php` - Kullanıcı özet ekranı.
-2. `panel/institutions/index.php` - Sahip olunan kurumlar listesi.
-3. `panel/institutions/create.php` - Yeni kurum ekleme (çok adımlı form).
-4. `panel/institutions/edit.php` - Kurum bilgilerini güncelleme formu.
-5. `panel/institution_images/index.php` - Kurum fotoğraf galerisi yönetimi (yükleme, sıralama, ana resim).
-6. `panel/institution_inquiries/index.php` - Kuruma gelen mesajlar/talepler listesi.
-7. `panel/institution_faq_answers/index.php` - Kuruma özel SSS soru ve cevaplarını yönetme.
-
-### 6) Admin (Sistem Yönetimi ve Moderasyon)
-1. `admin/dashboard.php` - Genel platform istatistikleri ve özet.
-2. `admin/users/index.php` - Üye yönetimi listesi.
-3. `admin/institutions/index.php` - Platformdaki tüm kurumların yönetimi ve onay statüleri.
-4. `admin/institution_applications/index.php` - Kurum sahiplenme veya yeni kayıt başvuruları onay ekranı.
-5. `admin/institution_applications/show.php` - Başvuru detaylarını inceleme ekranı.
-
-### 7) Admin (Referans Verileri - CRUD Ekranları)
-Controllerlarda tanımlı olan sistem yönetimi ayarları:
-1. `admin/categories/` - `index.php`, `form.php` (Kategori yönetimi)
-2. `admin/sub_categories/` - `index.php`, `form.php` (Alt kategori yönetimi)
-3. `admin/cities/` - `index.php`, `form.php` (Şehir yönetimi)
-4. `admin/districts/` - `index.php`, `form.php` (İlçe yönetimi)
-5. `admin/package_types/` - `index.php`, `form.php` (Paket ve üyelik tipleri yönetimi)
-6. `admin/attributes/` - `index.php`, `form.php` (Kurum özellikleri yönetimi - örn: Havuz, Yemek)
-7. `admin/faqs/` - `index.php`, `form.php` (Genel sıkça sorulan sorular yönetimi)
