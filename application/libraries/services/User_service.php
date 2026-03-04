@@ -13,16 +13,12 @@ class User_service
         $this->userModel = new User_model();
     }
 
-    /**
-     * Yeni kullanıcı oluşturur.
-     * - Zorunlu alan kontrolü
-     * - Email formatı
-     * - Unique email kontrolü
-     * - Şifre hashleme
-     * Başarılıysa user id döner, başarısızsa FALSE.
-     */
-    public function create_user($data)
+    public function create($data)
     {
+        if (!is_array($data)) {
+            return FALSE;
+        }
+
         $name = isset($data['name']) ? trim((string) $data['name']) : '';
         $email = isset($data['email']) ? trim((string) $data['email']) : '';
         $password = isset($data['password']) ? (string) $data['password'] : '';
@@ -35,8 +31,7 @@ class User_service
             return FALSE;
         }
 
-        $exists = $this->userModel->find_by_email($email);
-        if ($exists) {
+        if ($this->exists_by_email($email)) {
             return FALSE;
         }
 
@@ -52,42 +47,13 @@ class User_service
         return $this->userModel->create($insert);
     }
 
-    /**
-     * ID ile kullanıcı getirir.
-     */
-    public function find($id)
+    // Backward compatibility for existing calls.
+    public function create_user($data)
     {
-        return $this->userModel->find($id);
+        return $this->create($data);
     }
 
-    /**
-     * Email ile kullanıcı getirir.
-     */
-    public function find_by_email($email)
-    {
-        return $this->userModel->find_by_email($email);
-    }
-
-    /**
-     * Login sırasında düz şifre ile hash'i doğrular.
-     */
-    public function verify_password($plainPassword, $passwordHash)
-    {
-        $plainPassword = (string) $plainPassword;
-        $passwordHash = (string) $passwordHash;
-
-        if ($plainPassword === '' || $passwordHash === '') {
-            return FALSE;
-        }
-
-        return password_verify($plainPassword, $passwordHash);
-    }
-
-    /**
-     * Kullanıcı günceller.
-     * Şifre gelirse hashleyip yazar.
-     */
-    public function update_user($id, $data)
+    public function update($id, $data)
     {
         $id = (int) $id;
         if ($id <= 0 || !is_array($data) || empty($data)) {
@@ -97,7 +63,11 @@ class User_service
         $update = array();
 
         if (array_key_exists('name', $data)) {
-            $update['name'] = trim((string) $data['name']);
+            $name = trim((string) $data['name']);
+            if ($name === '') {
+                return FALSE;
+            }
+            $update['name'] = $name;
         }
 
         if (array_key_exists('email', $data)) {
@@ -111,8 +81,7 @@ class User_service
                 return FALSE;
             }
 
-            $exists = $this->userModel->find_by_email($email);
-            if ($exists && (int) $exists['id'] !== $id) {
+            if ($this->exists_by_email($email, $id)) {
                 return FALSE;
             }
 
@@ -136,6 +105,15 @@ class User_service
             $update['password'] = password_hash((string) $data['password'], PASSWORD_DEFAULT);
         }
 
+        if (array_key_exists('email_verified_at', $data)) {
+            $value = $data['email_verified_at'];
+            $value = $value !== NULL ? trim((string) $value) : NULL;
+            if ($value === '') {
+                $value = NULL;
+            }
+            $update['email_verified_at'] = $value;
+        }
+
         if (empty($update)) {
             return FALSE;
         }
@@ -143,9 +121,61 @@ class User_service
         return $this->userModel->update($id, $update);
     }
 
-    /**
-     * Şifreyi direkt değiştirir (hashleyerek).
-     */
+    // Backward compatibility for existing calls.
+    public function update_user($id, $data)
+    {
+        return $this->update($id, $data);
+    }
+
+    public function delete($id)
+    {
+        return $this->userModel->delete($id);
+    }
+
+    public function find($id)
+    {
+        return $this->userModel->find($id);
+    }
+
+    public function find_by_email($email)
+    {
+        return $this->userModel->find_by_email($email);
+    }
+
+    public function find_by_reset_token($token)
+    {
+        return $this->userModel->find_by_reset_token($token);
+    }
+
+    public function exists_by_email($email, $excludeId = NULL)
+    {
+        $email = trim((string) $email);
+        if ($email === '') {
+            return FALSE;
+        }
+
+        $row = $this->userModel->find_by_email($email);
+        if (!$row) {
+            return FALSE;
+        }
+
+        if ($excludeId !== NULL && isset($row['id']) && (int) $row['id'] === (int) $excludeId) {
+            return FALSE;
+        }
+
+        return TRUE;
+    }
+
+    public function list($filters = array(), $limit = 20, $offset = 0)
+    {
+        return $this->userModel->list($filters, $limit, $offset);
+    }
+
+    public function count($filters = array())
+    {
+        return (int) $this->userModel->count($filters);
+    }
+
     public function set_password($id, $plainPassword)
     {
         $id = (int) $id;
@@ -159,17 +189,38 @@ class User_service
         return $this->userModel->set_password($id, $hash);
     }
 
-    /**
-     * reset_token + reset_expires alanlarını set/clear eder.
-     */
+    public function verify_password($plainPassword, $passwordHash)
+    {
+        $plainPassword = (string) $plainPassword;
+        $passwordHash = (string) $passwordHash;
+
+        if ($plainPassword === '' || $passwordHash === '') {
+            return FALSE;
+        }
+
+        return password_verify($plainPassword, $passwordHash);
+    }
+
+    public function set_status($id, $status)
+    {
+        return $this->userModel->set_status($id, $status);
+    }
+
+    public function set_role($id, $role)
+    {
+        return $this->userModel->set_role($id, $role);
+    }
+
+    public function set_email_verified_at($id, $datetime)
+    {
+        return $this->userModel->set_email_verified_at($id, $datetime);
+    }
+
     public function set_reset_token($id, $token, $expiresAt)
     {
         return $this->userModel->set_reset_token($id, $token, $expiresAt);
     }
 
-    /**
-     * remember_token alanını set/clear eder.
-     */
     public function set_remember_token($id, $token)
     {
         return $this->userModel->set_remember_token($id, $token);

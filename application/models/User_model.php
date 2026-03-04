@@ -119,6 +119,11 @@ class User_model extends CI_Model
             ->result_array();
     }
 
+    public function list($filters = array(), $limit = 20, $offset = 0)
+    {
+        return $this->get_list($filters, $limit, $offset);
+    }
+
     public function count($filters = array())
     {
         $this->db->from($this->table);
@@ -215,6 +220,20 @@ class User_model extends CI_Model
         }
 
         return $this->update($id, array('remember_token' => $value));
+    }
+
+    public function find_by_remember_token($token)
+    {
+        $token = trim((string) $token);
+        if ($token === '') {
+            return NULL;
+        }
+
+        return $this->db
+            ->where('remember_token', $token)
+            ->limit(1)
+            ->get($this->table)
+            ->row_array();
     }
 
     protected function apply_filters($filters = array())

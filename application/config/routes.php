@@ -61,6 +61,11 @@ $route['translate_uri_dashes'] = FALSE;
 */
 $route['web/home'] = 'web/home/index';
 $route['kurumlar'] = 'web/institutions/index';
+$route['giris'] = 'web/auth/login';
+$route['kayit'] = 'web/auth/register';
+$route['cikis'] = 'web/auth/logout';
+$route['sifremi-unuttum'] = 'web/auth/forgot_password';
+$route['sifre-sifirla/(:any)'] = 'web/auth/reset_password/$1';
 
 /*
 |--------------------------------------------------------------------------
@@ -69,3 +74,8 @@ $route['kurumlar'] = 'web/institutions/index';
 */
 $route['api/v1/institutions'] = 'api/v1/institutions/index';
 $route['api/v1/institutions/(:num)'] = 'api/v1/institutions/show/$1';
+$route['api/v1/auth/login'] = 'api/v1/auth/login';
+$route['api/v1/auth/register'] = 'api/v1/auth/register';
+$route['api/v1/auth/logout'] = 'api/v1/auth/logout';
+$route['api/v1/auth/forgot-password'] = 'api/v1/auth/forgot_password';
+$route['api/v1/auth/reset-password'] = 'api/v1/auth/reset_password';

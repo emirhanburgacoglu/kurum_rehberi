@@ -100,7 +100,7 @@ Kısa kural:
 
 Bu bölüm, servislerden önce yazılacak model katmanının net kapsamını tanımlar.
 
-### 1) User_model (`users`)
+### 1) User_model (`users`)    
 
 1. `find(int $id): ?array`
 2. `find_by_email(string $email): ?array`
