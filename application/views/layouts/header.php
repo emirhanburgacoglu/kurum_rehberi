@@ -28,27 +28,27 @@
                     <div class="offcanvas-body">
                         <ul class="navbar-nav ms-auto align-items-lg-center">
                             <li class="nav-item">
-                                <a class="nav-link <?=($current == 'istanbul') ? 'active' : ''?>" href="<?=base_url('istanbul')?>">
+                                <a class="nav-link" href="<?=base_url('istanbul')?>">
                                     <i class="bi bi-geo-alt"></i> İstanbul'da Okullar
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link <?=($current == 'ankara') ? 'active' : ''?>" href="<?=base_url('ankara')?>">
+                                <a class="nav-link" href="<?=base_url('ankara')?>">
                                     <i class="bi bi-geo-alt"></i> Ankara'da Okullar
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link <?=($current == 'izmir') ? 'active' : ''?>" href="<?=base_url('izmir')?>">
+                                <a class="nav-link" href="<?=base_url('izmir')?>">
                                     <i class="bi bi-geo-alt"></i> İzmir'de Okullar
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link <?=($current == 'bilgi-al') ? 'active' : ''?>" href="<?=base_url('bilgi-al')?>">
+                                <a class="nav-link" href="<?=base_url('bilgi-al')?>">
                                     <i class="bi bi-info-circle"></i> Bilgi Al
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link <?=($current == 'sehir-rehberi') ? 'active' : ''?>" href="<?=base_url('sehir-rehberi')?>">
+                                <a class="nav-link" href="<?=base_url('sehir-rehberi')?>">
                                     <i class="bi bi-book"></i> Şehir Rehberi
                                 </a>
                             </li>
