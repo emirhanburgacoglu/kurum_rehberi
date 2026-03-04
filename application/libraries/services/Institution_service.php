@@ -4,7 +4,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
  * @property CI_Controller $CI
  * @property Institution_model $Institution_model
  */
-class Institution_library
+class Institution_service
 {
     /** @var mixed CI super object (CI3 magic properties) */
     protected $CI;
@@ -53,6 +53,7 @@ class Institution_library
             'created_at' => date('Y-m-d H:i:s')
         );
     }
+
     public function get_detail($id)
     {
         if (!is_numeric($id) || (int) $id <= 0) {

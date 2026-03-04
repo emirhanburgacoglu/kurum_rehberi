@@ -2,7 +2,7 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 /**
- * @property Institution_library $institution_library
+ * @property Institution_service $institution_service
  * @property CI_Input $input
  */
 class Institutions extends API_Controller
@@ -10,7 +10,7 @@ class Institutions extends API_Controller
     public function __construct()
     {
         parent::__construct();
-        $this->load->library('institution_library');
+        $this->load->library('services/Institution_service');
     }
 
     public function index()
@@ -21,7 +21,7 @@ class Institutions extends API_Controller
             'sub_category_id' => $this->input->get('sub_category_id', TRUE)
         );
 
-        $institutions = $this->institution_library->get_filtered_list($filters);
+        $institutions = $this->institution_service->get_filtered_list($filters);
 
         $this->response(array(
             'success' => TRUE,
@@ -36,7 +36,7 @@ class Institutions extends API_Controller
     }
     public function show($id = null)
     {
-        $result = $this->institution_library->get_detail($id);
+        $result = $this->institution_service->get_detail($id);
 
         if (!$result['success']) {
             $status = isset($result['errors']['id']) && $result['message'] === 'Institution not found.' ? 404 : 400;
