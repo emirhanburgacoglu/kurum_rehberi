@@ -17,23 +17,27 @@ class Institution_service
 
     public function get_filtered_list($filters = array())
     {
-        $data = $this->CI->Institution_model->search($filters);
+        $filters = $this->normalize_public_filters($filters);
+
+        /**
+         * Hızlı arama kutusu senaryosu:
+         * Sadece "q" geldiyse modelin optimize edilmiş keyword aramasını kullan.
+         * Ek filtre varsa list() ile tek sorguda tüm koşulları uygula.
+         */
+        $hasOnlyKeyword = !empty($filters['q'])
+            && empty($filters['city_id'])
+            && empty($filters['district_id'])
+            && empty($filters['category_id'])
+            && empty($filters['sub_category_id']);
+
+        if ($hasOnlyKeyword) {
+            $data = $this->CI->Institution_model->search_by_keyword($filters['q'], 50);
+        } else {
+            $data = $this->CI->Institution_model->list($filters, 1000, 0);
+        }
 
         foreach ($data as &$item) {
-            $name = isset($item['name']) ? (string) $item['name'] : '';
-            $item['thumbnail'] = !empty($item['image_path'])
-                ? base_url($item['image_path'])
-                : base_url('assets/img/default-kurum.png');
-
-            if (function_exists('mb_strlen') && function_exists('mb_substr')) {
-                $item['display_name'] = (mb_strlen($name, 'UTF-8') > 50)
-                    ? mb_substr($name, 0, 47, 'UTF-8') . "..."
-                    : $name;
-            } else {
-                $item['display_name'] = (strlen($name) > 50)
-                    ? substr($name, 0, 47) . "..."
-                    : $name;
-            }
+            $this->decorate_list_item($item);
         }
         unset($item);
 
@@ -88,5 +92,57 @@ class Institution_service
             'data' => array('institution' => $item),
             'errors' => NULL
         );
+    }
+
+    /**
+     * Public (web/api) listelerde sadece aktif kurumların görünmesini garanti eder.
+     * Ayrıca modelin beklediği filtre anahtarlarını normalize ederek gereksiz/verisiz
+     * parametreleri sorguya taşımayı engeller.
+     *
+     * @param  array $filters
+     * @return array
+     */
+    private function normalize_public_filters($filters)
+    {
+        $filters = is_array($filters) ? $filters : array();
+
+        return array(
+            // Public tarafta zorunlu kural: sadece aktif kurumlar.
+            'status' => 1,
+            'q' => isset($filters['q']) ? trim((string) $filters['q']) : '',
+            'city_id' => isset($filters['city_id']) ? (string) $filters['city_id'] : '',
+            'district_id' => isset($filters['district_id']) ? (string) $filters['district_id'] : '',
+            'category_id' => isset($filters['category_id']) ? (string) $filters['category_id'] : '',
+            'sub_category_id' => isset($filters['sub_category_id']) ? (string) $filters['sub_category_id'] : '',
+            // Modeldeki varsayılan sıralama zaten priority; burada niyeti açıkça belirtiyoruz.
+            'sort' => isset($filters['sort']) ? (string) $filters['sort'] : 'priority'
+        );
+    }
+
+    /**
+     * Liste çıktısını UI/API tüketimine hazır hale getirir.
+     * - thumbnail: Görsel yoksa default görsel üretir
+     * - display_name: Kart tasarımlarında taşmayı önlemek için kısaltılmış isim
+     *
+     * @param array $item
+     * @return void
+     */
+    private function decorate_list_item(&$item)
+    {
+        $name = isset($item['name']) ? (string) $item['name'] : '';
+        $item['thumbnail'] = !empty($item['image_path'])
+            ? base_url($item['image_path'])
+            : base_url('assets/img/default-kurum.png');
+
+        if (function_exists('mb_strlen') && function_exists('mb_substr')) {
+            $item['display_name'] = (mb_strlen($name, 'UTF-8') > 50)
+                ? mb_substr($name, 0, 47, 'UTF-8') . "..."
+                : $name;
+            return;
+        }
+
+        $item['display_name'] = (strlen($name) > 50)
+            ? substr($name, 0, 47) . "..."
+            : $name;
     }
 }
