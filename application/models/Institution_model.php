@@ -14,6 +14,8 @@ defined('BASEPATH') or exit('No direct script access allowed');
  *  - Arama (2 tip)     : search_by_keyword, search_by_filters, count_by_filters
  *  - Durum / Sayaçlar  : set_status, increment_* metodları
  *  - Paket / Sahip     : set_package, attach_owner
+ *  - Premium           : get_premium_institutions             ← YENİ
+ *  - Kısayollar        : count_active                         ← YENİ
  *  - Private yardımcı  : _apply_sort
  *
  * SIRALAMA MANTIĞI (package_type_id önceliği):
@@ -255,20 +257,46 @@ class Institution_model extends CI_Model
     }
 
     // =========================================================================
+    // KISA YOLLAR
+    // =========================================================================
+
+    /**
+     * Veritabanındaki aktif (status=1) kurum sayısını döner.
+     *
+     * Kullanım yeri:
+     *   Ana sayfadaki "X kayıtlı kurum" istatistik widget'ı için.
+     *   count(['status' => 1]) ile özdeştir; kısayol olarak okunabilirliği artırır.
+     *
+     * @return int
+     */
+    public function count_active()
+    {
+        return (int) $this->db
+            ->where('status', 1)
+            ->count_all_results($this->table);
+    }
+
+    // =========================================================================
     // ARAMA — TİP 1: Kelime bazlı (header / arama kutusu)
     // =========================================================================
 
     /**
-     * Kullanıcının yazdığı kelimeyi kurum adında arar.
+     * Kullanıcının yazdığı kelimeyi kurum adı, açıklama ve adres alanlarında arar.
      *
      * Kullanım yeri:
      *   Sitenin üst kısmındaki arama kutusunda hızlı/anlık sonuç göstermek için.
-     *   Örnek: Kullanıcı "Atatürk" yazdı → adında "Atatürk" geçen kurumlar döner.
+     *   Örnek: Kullanıcı "Atatürk" yazdı → adında, açıklamasında veya adresinde
+     *   "Atatürk" geçen kurumlar döner.
      *
      * search_by_filters'dan farkı:
-     *   Dropdown filtresi yoktur, sadece kurum adına bakar.
-     *   JOIN sayısı azdır, çok daha hızlıdır.
+     *   Dropdown filtresi yoktur; kurum adı, açıklama ve adres alanlarına bakar.
      *   Sonuç sayısı sınırlı tutulur (autocomplete / önizleme için).
+     *
+     * Alan önceliği:
+     *   1. i.name        → Kurum adı (en önemli alan)
+     *   2. i.description → Kurum açıklaması
+     *   3. i.address     → Kurum adresi
+     *   OR ile birleştirilir; herhangi birinde eşleşen kurum sonuçlara girer.
      *
      * Sıralama:
      *   Paket öncelik sırası: package_type_id = 2 önce, 1 sonra, geri kalanlar en sona.
@@ -279,12 +307,20 @@ class Institution_model extends CI_Model
      */
     public function search_by_keyword($q, $limit = 10)
     {
+        $keyword = trim((string) $q);
+
         $this->db->select('i.id, i.name, i.slug, ci.city_name, sc.sub_category_name');
         $this->db->from($this->table . ' i');
         $this->db->join('sub_categories sc', 'sc.id = i.sub_category_id', 'left');
         $this->db->join('cities ci',         'ci.id = i.city_id',         'left');
         $this->db->where('i.status', 1);
-        $this->db->like('i.name', trim((string) $q));
+
+        // Kurum adı, açıklama veya adres alanlarından herhangi birinde eşleşen kurumları getir
+        $this->db->group_start()
+            ->like('i.name', $keyword)
+            ->or_like('i.description', $keyword)
+            ->or_like('i.address', $keyword)
+            ->group_end();
 
         $this->_apply_sort('priority');
 
@@ -390,6 +426,41 @@ class Institution_model extends CI_Model
         }
 
         return (int) $this->db->count_all_results();
+    }
+
+    // =========================================================================
+    // PREMİUM KURUMLAR
+    // =========================================================================
+
+    /**
+     * Aktif premium kurumları (package_type_id = 2) getirir.
+     *
+     * Kullanım yeri:
+     *   Ana sayfadaki "Öne Çıkan Kurumlar" veya "Premium Kurumlar" bölümü için.
+     *   get_filtered_list() içindeki priority sıralamasından farklı olarak
+     *   yalnızca premium kurumları döner; diğerleri sonuçlara girmez.
+     *
+     * get_filtered_list()'ten farkı:
+     *   Bu metod yalnızca package_type_id = 2 olan kurumları döner.
+     *   get_filtered_list(), tüm aktif kurumları getirir ve premium olanları
+     *   listenin üstüne taşır; bu metod ise sadece premium olanları seçer.
+     *
+     * Sıralama:
+     *   package_expires_at DESC → süresi en geç bitecek premium kurum önce gelir.
+     *   Böylece yeni/uzun süreli aboneler daha üstte görünür.
+     *
+     * @param  int  $limit  Maksimum sonuç sayısı (varsayılan 6, ana sayfa grid'i için)
+     * @return array
+     */
+    public function get_premium_institutions($limit = 6)
+    {
+        return $this->db
+            ->where('status', 1)
+            ->where('package_type_id', 2)
+            ->order_by('package_expires_at', 'DESC')
+            ->limit((int) $limit)
+            ->get($this->table)
+            ->result_array();
     }
 
     // =========================================================================
